@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from openai import OpenAI
 
 from src.api.schema import AskRequest, AskResponse
+from utils.llm_client import GenerationClient
 from src.config import config
 
 openai_client = OpenAI(
@@ -32,24 +33,23 @@ def ask_question(request: AskRequest):
         {"role": "system", "content": INSTRUCTIONS},
         {"role": "user", "content": request.question},
     ]
-    start_time = time.perf_counter()
 
-    response = openai_client.responses.create(
-        input=messages, model=config.MODEL_NAME, temperature=0.2, max_output_tokens=500
+    generation_client = GenerationClient(client=openai_client)
+    response = generation_client.generate_answer(
+        messages=messages,
+        model=config.MODEL_NAME,
+        temperature=0.2,
+        max_output_tokens=config.MAX_GENERATED_TOKENS
     )
-    answer = response.output_text.strip()
-    latency_ms = int((time.perf_counter() - start_time) * 1000)
-    if response.status == "incomplete":
-        if response.incomplete_details == "max_output_tokens":
+    answer = response["answer"]
+    if response["status"] == "incomplete":
+        reason = response["incomplete_reason"]
+        if reason in ["max_output_tokens", "max_tokens"]:
             answer += "\n\n[Note: The answer may be incomplete due to reaching the maximum output token limit.]"
 
         else:
-            answer += f"\n\n[Note: The answer may be incomplete. Reason: {response.incomplete_details.reason}]"
+            answer += f"\n\n[Note: The answer may be incomplete. Reason: {response['incomplete_reason']}]"
 
-    usage = {
-        "input_tokens": response.usage.input_tokens,
-        "output_tokens": response.usage.output_tokens,
-        "total_tokens": response.usage.total_tokens,
-    }
 
-    return AskResponse(answer=answer, latency_ms=latency_ms, usage=usage)
+
+    return AskResponse(**{**response, 'answer': answer})
