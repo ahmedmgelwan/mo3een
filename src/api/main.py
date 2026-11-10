@@ -1,11 +1,9 @@
-import time
-
 from fastapi import FastAPI
 from openai import OpenAI
 
 from src.api.schema import AskRequest, AskResponse
-from utils.llm_client import GenerationClient
 from src.config import config
+from utils.llm_client import GenerationClient
 
 openai_client = OpenAI(
     api_key=config.OPEN_AI_KEY, base_url=config.BASE_URL, timeout=config.REQUEST_TIMEOUT
@@ -39,7 +37,7 @@ def ask_question(request: AskRequest):
         messages=messages,
         model=config.MODEL_NAME,
         temperature=0.2,
-        max_output_tokens=config.MAX_GENERATED_TOKENS
+        max_output_tokens=config.MAX_GENERATED_TOKENS,
     )
     answer = response["answer"]
     if response["status"] == "incomplete":
@@ -50,6 +48,4 @@ def ask_question(request: AskRequest):
         else:
             answer += f"\n\n[Note: The answer may be incomplete. Reason: {response['incomplete_reason']}]"
 
-
-
-    return AskResponse(**{**response, 'answer': answer})
+    return AskResponse(**{**response, "answer": answer})

@@ -1,16 +1,18 @@
-import os
 import time
 
 from dotenv import load_dotenv
-
-from openai import OpenAI
 from fastembed import TextEmbedding
+from openai import OpenAI
+
+from src.config import config
 
 load_dotenv()
 
-base_url = os.getenv("BASE_URL")
-timeout = int(os.getenv("REQUEST_TIMEOUT"))
-max_generated_tokens = int(os.getenv("MAX_GENERATED_TOKENS"))
+base_url = config.BASE_URL
+timeout = config.REQUEST_TIMEOUT
+max_generated_tokens = int(config.MAX_GENERATED_TOKENS)
+model_name = config.MODEL_NAME
+embedding_model_name = config.EMBEDDING_MODEL_NAME
 
 
 class GenerationClient:
@@ -21,13 +23,13 @@ class GenerationClient:
         timeout: int = timeout,
     ):
         self.client = client or OpenAI(
-            api_key=os.getenv("OPEN_AI_API_KEY"), base_url=base_url, timeout=timeout
+            api_key=config.OPEN_AI_KEY, base_url=base_url, timeout=timeout
         )
 
     def generate_answer(
         self,
         messages: list,
-        model: str,
+        model: str = model_name,
         temperature: float = 0.2,
         max_output_tokens: int = max_generated_tokens,
     ) -> dict:
@@ -62,7 +64,7 @@ class EmbeddingClient:
     def __init__(self, model_id: str | None = None):
         self.model = model_id
         if model_id is None:
-            self.embeder = TextEmbedding()
+            self.embeder = TextEmbedding(model_name=embedding_model_name)
         else:
             self.embeder = TextEmbedding(model_name=model_id)
 
