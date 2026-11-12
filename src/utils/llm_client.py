@@ -11,14 +11,14 @@ load_dotenv()
 base_url = config.BASE_URL
 timeout = config.REQUEST_TIMEOUT
 max_generated_tokens = int(config.MAX_GENERATED_TOKENS)
-model_name = config.MODEL_NAME
+generation_model_name = config.GENERATION_MODEL_NAME
 embedding_model_name = config.EMBEDDING_MODEL_NAME
 
 
 class GenerationClient:
     def __init__(
         self,
-        client: OpenAI = None,
+        client: OpenAI | None = None,
         base_url: str = base_url,
         timeout: int = timeout,
     ):
@@ -29,7 +29,7 @@ class GenerationClient:
     def generate_answer(
         self,
         messages: list,
-        model: str = model_name,
+        model: str = generation_model_name,
         temperature: float = 0.2,
         max_output_tokens: int = max_generated_tokens,
     ) -> dict:
@@ -68,6 +68,9 @@ class EmbeddingClient:
         else:
             self.embeder = TextEmbedding(model_name=model_id)
 
-    def embed_text(self, texts: list[str]) -> list[list[float]]:
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
         embeddings = list(self.embeder.embed(texts))
         return embeddings
+
+generation_client = GenerationClient()
+embedding_client = EmbeddingClient(model_id=embedding_model_name)

@@ -5,6 +5,9 @@ class AskRequest(BaseModel):
     question: str = Field(
         ..., description="The question to ask the model.", min_length=1, max_length=1000
     )
+    session_id: str = Field(
+        ..., description="A unique identifier for the session in which the question is asked."
+    )
 
 
 class AskResponse(BaseModel):
@@ -19,4 +22,7 @@ class AskResponse(BaseModel):
     )
     usage: dict = Field(
         ..., description="Token usage statistics for the request and response."
+    )
+    session_id: str = Field(
+        ..., description="A unique identifier for the session in which the question was asked."
     )
